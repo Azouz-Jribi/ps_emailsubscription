@@ -97,6 +97,7 @@ class Ps_Emailsubscription extends Module implements WidgetInterface
                     'displayFooterBefore',
                     'actionCustomerAccountAdd',
                     'additionalCustomerFormFields',
+                    'displayAdminCustomersForm',
                 )
             )
         ) {
@@ -1213,5 +1214,43 @@ class Ps_Emailsubscription extends Module implements WidgetInterface
         return
             $this->trans('You may unsubscribe at any moment. For that purpose, please find our contact info in the legal notice.', array(), 'Modules.Emailsubscription.Shop', $locale)
         ;
+    }
+
+    /**
+     * hook display AdminCustomers form
+     * @return string
+     */
+    public function hookDisplayAdminCustomersForm() {
+        $newsletter = Db::getInstance( _PS_USE_SQL_SLAVE_ )->getValue( 'SELECT `newsletter`
+		FROM ' . _DB_PREFIX_ . 'customer
+		WHERE `id_customer` = ' . (int) Tools::getValue( 'id_customer', 0 ) );
+
+        $input = array(
+          'type' => 'switch',
+          'label' => $this->trans( 'Newsletter', array(), 'Admin.Orderscustomers.Feature' ),
+          'name' => 'newsletter',
+          'required' => FALSE,
+          'class' => 't',
+          'is_bool' => TRUE,
+          'value' => $newsletter,
+          'values' => array(
+            array(
+              'id' => 'newsletter_on',
+              'value' => 1,
+              'label' => $this->trans( 'Enabled', array(), 'Admin.Global' )
+            ),
+            array(
+              'id' => 'newsletter_off',
+              'value' => 0,
+              'label' => $this->trans( 'Disabled', array(), 'Admin.Global' )
+            )
+          ),
+            /** TODO : to verify, if it will be used */
+          //'disabled' =>  (bool) !Configuration::get('PS_CUSTOMER_OPTIN'),
+          'hint' => $this->trans( 'This customer will receive your newsletter via email.', array(), 'Admin.Orderscustomers.Help' )
+        );
+        $this->context->smarty->assign( array('input' => $input) );
+
+        return $this->display(__FILE__, 'views/templates/admin/newsletter_subscribe.tpl');
     }
 }
